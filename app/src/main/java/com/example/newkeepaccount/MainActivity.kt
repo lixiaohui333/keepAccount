@@ -95,6 +95,117 @@ fun MonthlyStatsDialog(
     )
 }
 
+@Composable
+fun FilterSortBar(
+    selectedDateRange: DateRange,
+    selectedTypeFilter: TypeFilter,
+    selectedSortOption: SortOption,
+    onDateRangeSelected: (DateRange) -> Unit,
+    onTypeFilterSelected: (TypeFilter) -> Unit,
+    onSortOptionSelected: (SortOption) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // 日期范围选择
+        var showDateRangeMenu by remember { mutableStateOf(false) }
+        Box {
+            TextButton(
+                onClick = { showDateRangeMenu = true },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(selectedDateRange.label)
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = "选择日期范围"
+                )
+            }
+            DropdownMenu(
+                expanded = showDateRangeMenu,
+                onDismissRequest = { showDateRangeMenu = false }
+            ) {
+                DateRange.values().forEach { range ->
+                    DropdownMenuItem(
+                        text = { Text(range.label) },
+                        onClick = {
+                            onDateRangeSelected(range)
+                            showDateRangeMenu = false
+                        }
+                    )
+                }
+            }
+        }
+
+        // 类型筛选
+        var showTypeMenu by remember { mutableStateOf(false) }
+        Box {
+            TextButton(
+                onClick = { showTypeMenu = true },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(selectedTypeFilter.label)
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = "选择类型筛选"
+                )
+            }
+            DropdownMenu(
+                expanded = showTypeMenu,
+                onDismissRequest = { showTypeMenu = false }
+            ) {
+                TypeFilter.values().forEach { filter ->
+                    DropdownMenuItem(
+                        text = { Text(filter.label) },
+                        onClick = {
+                            onTypeFilterSelected(filter)
+                            showTypeMenu = false
+                        }
+                    )
+                }
+            }
+        }
+
+        // 排序选项
+        var showSortMenu by remember { mutableStateOf(false) }
+        Box {
+            TextButton(
+                onClick = { showSortMenu = true },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(selectedSortOption.label)
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = "选择排序方式"
+                )
+            }
+            DropdownMenu(
+                expanded = showSortMenu,
+                onDismissRequest = { showSortMenu = false }
+            ) {
+                SortOption.values().forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option.label) },
+                        onClick = {
+                            onSortOptionSelected(option)
+                            showSortMenu = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
 class MainActivity : ComponentActivity() {
     private lateinit var dbHelper: AccountDbHelper
 
@@ -111,10 +222,18 @@ class MainActivity : ComponentActivity() {
             var monthlyStats by remember { mutableStateOf(emptyList<MonthlyStats>()) }
             var showMonthlyStats by remember { mutableStateOf(false) }
             
+            var selectedDateRange by remember { mutableStateOf(DateRange.THIS_MONTH) }
+            var selectedTypeFilter by remember { mutableStateOf(TypeFilter.ALL) }
+            var selectedSortOption by remember { mutableStateOf(SortOption.DATE_DESC) }
+            
             // 加载数据和统计信息
-            LaunchedEffect(Unit) {
-                records = dbHelper.getAllRecords()
-                totalStats = dbHelper.getTotalStats()
+            LaunchedEffect(selectedDateRange, selectedTypeFilter, selectedSortOption) {
+                records = dbHelper.getFilteredAndSortedRecords(
+                    selectedDateRange,
+                    selectedTypeFilter,
+                    selectedSortOption
+                )
+                totalStats = dbHelper.getFilteredStats(selectedDateRange)
                 monthlyStats = dbHelper.getAllMonthlyStats()
             }
             
@@ -127,7 +246,17 @@ class MainActivity : ComponentActivity() {
                     Column(
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        // 总体统计卡片（可点击查看月度统计）
+                        // 筛选和排序栏
+                        FilterSortBar(
+                            selectedDateRange = selectedDateRange,
+                            selectedTypeFilter = selectedTypeFilter,
+                            selectedSortOption = selectedSortOption,
+                            onDateRangeSelected = { selectedDateRange = it },
+                            onTypeFilterSelected = { selectedTypeFilter = it },
+                            onSortOptionSelected = { selectedSortOption = it }
+                        )
+
+                        // 总体统计卡片
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -146,7 +275,7 @@ class MainActivity : ComponentActivity() {
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "总体统计",
+                                        text = selectedDateRange.label + "统计",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -384,7 +513,7 @@ fun RecordItem(
                 }
             }
 
-            // 右侧：操作��钮
+            // 右侧：操作���钮
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {

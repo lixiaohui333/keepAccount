@@ -214,4 +214,94 @@ class AccountDbHelper(context: Context) :
 
         return stats
     }
+
+    fun getFilteredAndSortedRecords(
+        dateRange: DateRange = DateRange.ALL,
+        typeFilter: TypeFilter = TypeFilter.ALL,
+        sortOption: SortOption = SortOption.DATE_DESC
+    ): List<AccountRecord> {
+        val records = mutableListOf<AccountRecord>()
+        val db = readableDatabase
+
+        val (startTime, endTime) = dateRange.getDateRange()
+        val orderBy = when (sortOption) {
+            SortOption.DATE_DESC -> "timestamp DESC"
+            SortOption.DATE_ASC -> "timestamp ASC"
+            SortOption.AMOUNT_DESC -> "amount * quantity DESC"
+            SortOption.AMOUNT_ASC -> "amount * quantity ASC"
+        }
+
+        val typeSelection = when (typeFilter) {
+            TypeFilter.ALL -> "timestamp >= ? AND timestamp < ?"
+            TypeFilter.INCOME_ONLY -> "timestamp >= ? AND timestamp < ? AND type = ?"
+            TypeFilter.EXPENSE_ONLY -> "timestamp >= ? AND timestamp < ? AND type = ?"
+        }
+
+        val typeSelectionArgs = when (typeFilter) {
+            TypeFilter.ALL -> arrayOf(startTime.toString(), endTime.toString())
+            TypeFilter.INCOME_ONLY -> arrayOf(startTime.toString(), endTime.toString(), TransactionType.INCOME.name)
+            TypeFilter.EXPENSE_ONLY -> arrayOf(startTime.toString(), endTime.toString(), TransactionType.EXPENSE.name)
+        }
+
+        val cursor = db.query(
+            "account_records",
+            null,
+            typeSelection,
+            typeSelectionArgs,
+            null,
+            null,
+            orderBy
+        )
+
+        with(cursor) {
+            while (moveToNext()) {
+                val record = AccountRecord(
+                    id = getLong(getColumnIndexOrThrow("id")),
+                    amount = getDouble(getColumnIndexOrThrow("amount")),
+                    quantity = getInt(getColumnIndexOrThrow("quantity")),
+                    item = getString(getColumnIndexOrThrow("item")),
+                    type = TransactionType.valueOf(getString(getColumnIndexOrThrow("type"))),
+                    timestamp = getLong(getColumnIndexOrThrow("timestamp"))
+                )
+                records.add(record)
+            }
+        }
+        cursor.close()
+        return records
+    }
+
+    fun getFilteredStats(dateRange: DateRange = DateRange.ALL): Triple<Double, Double, Double> {
+        val db = readableDatabase
+        var totalIncome = 0.0
+        var totalExpense = 0.0
+        val (startTime, endTime) = dateRange.getDateRange()
+
+        // 获取总收入
+        db.query(
+            "account_records",
+            arrayOf("SUM(amount * quantity) as total"),
+            "type = ? AND timestamp >= ? AND timestamp < ?",
+            arrayOf(TransactionType.INCOME.name, startTime.toString(), endTime.toString()),
+            null, null, null
+        ).use { cursor ->
+            if (cursor.moveToFirst()) {
+                totalIncome = cursor.getDouble(0)
+            }
+        }
+
+        // 获取总支出
+        db.query(
+            "account_records",
+            arrayOf("SUM(amount * quantity) as total"),
+            "type = ? AND timestamp >= ? AND timestamp < ?",
+            arrayOf(TransactionType.EXPENSE.name, startTime.toString(), endTime.toString()),
+            null, null, null
+        ).use { cursor ->
+            if (cursor.moveToFirst()) {
+                totalExpense = cursor.getDouble(0)
+            }
+        }
+
+        return Triple(totalIncome, totalExpense, totalIncome - totalExpense)
+    }
 } 
