@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.newkeepaccount"
+    namespace = "com.keepaccount.newkeepaccount"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.newkeepaccount"
+        applicationId = "com.keepaccount.newkeepaccount"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

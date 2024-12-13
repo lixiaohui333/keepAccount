@@ -1,4 +1,4 @@
-package com.example.newkeepaccount
+package com.keepaccount.newkeepaccount
 
 import org.junit.Test
 

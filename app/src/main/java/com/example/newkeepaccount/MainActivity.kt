@@ -1,4 +1,4 @@
-package com.example.newkeepaccount
+package com.keepaccount.newkeepaccount
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -14,14 +14,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.newkeepaccount.data.*
-import com.example.newkeepaccount.ui.screens.AddRecordScreen
-import com.example.newkeepaccount.ui.theme.NewKeepAccountTheme
+import com.keepaccount.newkeepaccount.data.*
+import com.keepaccount.newkeepaccount.ui.screens.AddRecordScreen
+import com.keepaccount.newkeepaccount.ui.theme.NewKeepAccountTheme
+import com.keepaccount.newkeepaccount.utils.ShareUtils
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.launch
 
 @Composable
 fun MonthlyStatsDialog(
@@ -214,7 +217,9 @@ class MainActivity : ComponentActivity() {
         dbHelper = AccountDbHelper(this)
         
         setContent {
-            var records by remember { mutableStateOf(emptyList<AccountRecord>()) }
+            val context = LocalContext.current
+            val scope = rememberCoroutineScope()
+            var records by remember { mutableStateOf(listOf<AccountRecord>()) }
             var showAddForm by remember { mutableStateOf(false) }
             var selectedRecord by remember { mutableStateOf<AccountRecord?>(null) }
             var showDeleteDialog by remember { mutableStateOf(false) }
@@ -237,7 +242,21 @@ class MainActivity : ComponentActivity() {
                 monthlyStats = dbHelper.getAllMonthlyStats()
             }
             
-            NewKeepAccountTheme { paddingValues ->
+            NewKeepAccountTheme(
+                onShareClick = {
+                    scope.launch {
+                        val imageUri = ShareUtils.generateBillImage(
+                            context,
+                            records,
+                            totalStats.first,
+                            totalStats.second
+                        )
+                        imageUri?.let { uri ->
+                            ShareUtils.shareBillImage(context, uri)
+                        }
+                    }
+                }
+            ) { paddingValues ->
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -513,7 +532,7 @@ fun RecordItem(
                 }
             }
 
-            // 右侧：操作���钮
+            // 右侧：操作按钮
             Row(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {

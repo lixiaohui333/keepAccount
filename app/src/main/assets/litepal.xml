@@ -3,6 +3,6 @@
     <dbname value="account" />
     <version value="1" />
     <list>
-        <mapping class="com.example.newkeepaccount.data.AccountRecord" />
+        <mapping class="com.keepaccount.newkeepaccount.data.AccountRecord" />
     </list>
 </litepal> 

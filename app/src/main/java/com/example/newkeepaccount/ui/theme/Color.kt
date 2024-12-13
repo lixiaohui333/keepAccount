@@ -1,4 +1,4 @@
-package com.example.newkeepaccount.ui.theme
+package com.keepaccount.newkeepaccount.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

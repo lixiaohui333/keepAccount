@@ -1,4 +1,4 @@
-package com.example.newkeepaccount.ui.screens
+package com.keepaccount.newkeepaccount.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,8 +11,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.example.newkeepaccount.data.AccountRecord
-import com.example.newkeepaccount.data.TransactionType
+import com.keepaccount.newkeepaccount.data.AccountRecord
+import com.keepaccount.newkeepaccount.data.TransactionType
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -40,8 +40,8 @@ fun AddRecordScreen(
 
     Column(
         modifier = Modifier
-            .padding(16.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // 标题
@@ -184,49 +184,43 @@ fun AddRecordScreen(
             }
         }
 
-        // 显示总金额
-        val totalAmount = (amount.toDoubleOrNull() ?: 0.0) * (quantity.toIntOrNull() ?: 1)
-        if (totalAmount > 0) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
+        // 显示总金额和按钮
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // 总金额显示
+            val totalAmount = (amount.toDoubleOrNull() ?: 0.0) * (quantity.toIntOrNull() ?: 1)
+            if (totalAmount > 0) {
                 Text(
-                    text = "总金额: ¥${String.format("%.2f", totalAmount)}",
+                    text = "总额: ¥${String.format("%.2f", totalAmount)}",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.padding(16.dp)
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
-        }
 
-        // 保存按钮
-        Button(
-            onClick = {
-                val amountValue = amount.toDoubleOrNull() ?: return@Button
-                val quantityValue = quantity.toIntOrNull() ?: 1
-                val itemValue = if (item.isBlank()) "杂费" else item.trim()
-                
-                val updatedRecord = AccountRecord(
-                    id = record?.id ?: 0,
-                    amount = amountValue,
-                    quantity = quantityValue,
-                    item = itemValue,
-                    type = selectedType,
-                    timestamp = AccountRecord.fromDate(selectedDate)
-                )
-                onSave(updatedRecord)
-                // 清空输入
-                amount = ""
-                quantity = "1"
-                item = ""
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = amount.isNotBlank() && amount.toDoubleOrNull() != null
-        ) {
-            Text(if (record == null) "添加" else "保存")
+            // 保存按钮
+            Button(
+                onClick = {
+                    val amountValue = amount.toDoubleOrNull() ?: return@Button
+                    val quantityValue = quantity.toIntOrNull() ?: 1
+                    val itemValue = if (item.isBlank()) "杂费" else item.trim()
+                    
+                    val updatedRecord = AccountRecord(
+                        id = record?.id ?: 0,
+                        amount = amountValue,
+                        quantity = quantityValue,
+                        item = itemValue,
+                        type = selectedType,
+                        timestamp = AccountRecord.fromDate(selectedDate)
+                    )
+                    onSave(updatedRecord)
+                },
+                enabled = amount.isNotBlank() && amount.toDoubleOrNull() != null
+            ) {
+                Text(if (record == null) "添加" else "保存")
+            }
         }
     }
 
@@ -256,13 +250,7 @@ fun AddRecordScreen(
                 }
             }
         ) {
-            DatePicker(
-                state = datePickerState,
-                dateValidator = { timestamp ->
-                    timestamp <= System.currentTimeMillis()
-                },
-                title = { Text("选择日期") }
-            )
+            DatePicker(state = datePickerState)
         }
     }
 } 

@@ -1,4 +1,4 @@
-package com.example.newkeepaccount.data
+package com.keepaccount.newkeepaccount.data
 
 import android.content.ContentValues
 import android.content.Context

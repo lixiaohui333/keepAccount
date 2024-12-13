@@ -1,4 +1,4 @@
-package com.example.newkeepaccount.data
+package com.keepaccount.newkeepaccount.data
 
 import java.time.LocalDate
 import java.time.YearMonth
