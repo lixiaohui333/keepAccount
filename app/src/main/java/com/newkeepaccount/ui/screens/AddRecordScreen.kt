@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.keepaccount.newkeepaccount.data.AccountRecord
 import com.keepaccount.newkeepaccount.data.TransactionType
 import java.time.LocalDate
@@ -41,8 +42,8 @@ fun AddRecordScreen(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // 标题
         Text(
@@ -217,9 +218,17 @@ fun AddRecordScreen(
                     )
                     onSave(updatedRecord)
                 },
-                enabled = amount.isNotBlank() && amount.toDoubleOrNull() != null
+                enabled = amount.isNotBlank() && amount.toDoubleOrNull() != null,
+                modifier = Modifier
+                    .height(48.dp)
+                    .padding(horizontal = 8.dp),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp)
             ) {
-                Text(if (record == null) "添加" else "保存")
+                Text(
+                    text = if (record == null) "添加" else "保存",
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
             }
         }
     }

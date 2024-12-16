@@ -151,7 +151,7 @@ class AccountDbHelper(context: Context) :
     fun getAllMonthlyStats(): List<MonthlyStats> {
         val stats = mutableListOf<MonthlyStats>()
         val monthsSet = mutableSetOf<YearMonth>()
-        
+
         // 获取所有记录的月份
         val db = readableDatabase
         db.query(
@@ -162,10 +162,8 @@ class AccountDbHelper(context: Context) :
         ).use { cursor ->
             while (cursor.moveToNext()) {
                 val timestamp = cursor.getLong(0)
-                val date = LocalDate.ofInstant(
-                    java.time.Instant.ofEpochMilli(timestamp),
-                    ZoneId.systemDefault()
-                )
+                val instant = java.time.Instant.ofEpochMilli(timestamp)
+                val date = instant.atZone(ZoneId.systemDefault()).toLocalDate()
                 monthsSet.add(YearMonth.from(date))
             }
         }
